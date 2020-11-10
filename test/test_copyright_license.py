@@ -7,8 +7,7 @@ import sys
 
 def test_copyright_licence():
     missing = check_files([Path(__file__).parents[1]])
-    assert not len(missing), \
-        'In some files no copyright / license line was found'
+    assert not len(missing), "In some files no copyright / license line was found"
 
 
 def check_files(paths):
@@ -16,24 +15,20 @@ def check_files(paths):
     for path in paths:
         if path.is_dir():
             for p in sorted(path.iterdir()):
-                if p.name.startswith('.'):
+                if p.name.startswith("."):
                     continue
-                if p.name.endswith('.py') or p.is_dir():
+                if p.name.endswith(".py") or p.is_dir():
                     missing += check_files([p])
         if path.is_file():
             content = path.read_text()
             if not content:
                 continue
             lines = content.splitlines()
-            has_copyright = \
-                any(l for l in lines if l.startswith('# Copyright'))
-            has_license = \
-                '# Licensed under the Apache License, Version 2.0' in lines
+            has_copyright = any(l for l in lines if l.startswith("# Copyright"))
+            has_license = "# Licensed under the Apache License, Version 2.0" in lines
             if not has_copyright or not has_license:
-                print(
-                    'Could not find copyright / license in:', path,
-                    file=sys.stderr)
-                missing .append(path)
+                print("Could not find copyright / license in:", path, file=sys.stderr)
+                missing.append(path)
             else:
-                print('Found copyright / license in:', path)
+                print("Found copyright / license in:", path)
     return missing

@@ -10,11 +10,11 @@ from colcon_core.environment_variable import EnvironmentVariable
 
 # Environment variable to override the Cargo executable
 CARGO_COMMAND_ENVIRONMENT_VARIABLE = EnvironmentVariable(
-    'CARGO_COMMAND', 'The full path to the Cargo executable')
+    "CARGO_COMMAND", "The full path to the Cargo executable"
+)
 
 
-def which_executable(environment_variable: str, executable_name: str) \
-        -> Optional[str]:
+def which_executable(environment_variable: str, executable_name: str) -> Optional[str]:
     """
     Determine the path of an executable.
 
@@ -33,5 +33,4 @@ def which_executable(environment_variable: str, executable_name: str) \
         return which
 
 
-CARGO_EXECUTABLE = which_executable(
-    CARGO_COMMAND_ENVIRONMENT_VARIABLE.name, 'cargo')
+CARGO_EXECUTABLE = which_executable(CARGO_COMMAND_ENVIRONMENT_VARIABLE.name, "cargo")
