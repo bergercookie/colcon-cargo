@@ -1,8 +1,10 @@
 # Copyright 2018 Easymov Robotics
 # Licensed under the Apache License, Version 2.0
 
-import os
 from pathlib import Path
+import os
+import shutil
+import toml
 
 from colcon_cargo.task.cargo import CARGO_EXECUTABLE
 from colcon_core.environment import create_environment_scripts
@@ -60,23 +62,46 @@ class CargoBuildTask(TaskExtensionPoint):
             create_environment_scripts(
                 pkg, args, additional_hooks=additional_hooks)
 
-    async def _build(self, args, env):
+    async def _build(self, args, env, *extra_flags, deps={}):
         self.progress('build')
 
-        os.makedirs(args.build_base, exist_ok=True)
+        Path(args.build_base).mkdir(exist_ok=True)
 
         env['CARGO_TARGET_DIR'] = args.build_base
 
         root_dir = os.path.join(
             args.install_base, 'lib', self.context.pkg.name)
 
+        # TODO Potentially use empy as the rest of the colcon extensions do
+        # caller has specified custom arguments to pass to rustc
+        if extra_flags:
+            if "RUSTFLAGS" not in env:
+                env["RUSTFLAGS"] = ""
+
+            env["RUSTFLAGS"] += " ".join(extra_flags)
+
+
         # invoke build step
         if CARGO_EXECUTABLE is None:
             raise RuntimeError("Could not find 'cargo' executable")
+
+        shutil.copytree(args.path, args.build_base, dirs_exist_ok=True)
+
+        # Edit build_dir/Cargo.toml
+        with open(Path(args.build_base) / "Cargo.toml") as f:
+            cargo_toml = toml.load(f)
+        if "dependencies" not in cargo_toml:
+            cargo_toml["dependencies"] = {}
+        cargo_toml["dependencies"].update(deps)
+        with open(Path(args.build_base) / "Cargo.toml", 'w') as f:
+            cargo_toml = toml.dump(cargo_toml, f)
+
+
         cmd = [
             CARGO_EXECUTABLE, 'install', '--force', '-q',
-            '--path', args.path,
-            '--root', root_dir]
+            '--path', args.build_base,
+            '--root', root_dir,
+        ]
 
         return await run(
             self.context, cmd, cwd=args.build_base, env=env)
